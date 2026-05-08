@@ -177,13 +177,13 @@ def process_telescope(telescope_path: Path):
 
                         if src.exists():
 
-                            dst = calib_target / sub
+                            end_d = calib_target / sub
 
-                            if not dst.exists():
-                                shutil.move(str(src), str(dst))
-                                print(f" Перемещено: из {src} в {dst}")
+                            if not end_d.exists():
+                                shutil.move(str(src), str(end_d))
+                                print(f" Перемещено: из {src} в {end_d}")
                             else:
-                                print(f" Папка уже существует: {dst}")
+                                print(f" Папка уже существует: {end_d}")
 
 
                 # Перемещение папок Science
@@ -196,11 +196,11 @@ def process_telescope(telescope_path: Path):
 
                     science_target.mkdir(parents=True, exist_ok=True)
 
-                    dst = science_target / "science"
+                    end_d = science_target / "science"
 
-                    if not dst.exists():
+                    if not end_d.exists():
 
-                        shutil.move(str(science_src), str(dst))
+                        shutil.move(str(science_src), str(end_d))
                 
                 #перемещение meta
                 meta_target = (science_out /year_name /date_name /"meta")
@@ -214,12 +214,12 @@ def process_telescope(telescope_path: Path):
 
                     for item in calib_meta.iterdir():
 
-                        dst = meta_target / item.name
+                        end_d = meta_target / item.name
 
-                        if not dst.exists():
+                        if not end_d.exists():
 
-                            shutil.move(str(item), str(dst))
-                            print(f" meta(calib): {item} → {dst}")
+                            shutil.move(str(item), str(end_d))
+                            print(f" meta(calib): {item} → {end_d}")
 
                     # meta из science
                 science_meta = date_dir / "science" / "meta"
@@ -228,12 +228,12 @@ def process_telescope(telescope_path: Path):
 
                     for item in science_meta.iterdir():
 
-                        dst = meta_target / item.name
+                        end_d = meta_target / item.name
 
-                        if not dst.exists():
+                        if not end_d.exists():
 
-                            shutil.move(str(item), str(dst))
-                            print(f" meta(science): {item} → {dst}")
+                            shutil.move(str(item), str(end_d))
+                            print(f" meta(science): {item} → {end_d}")
                 
 base = Path(r"paste the directory to the folder with files")
 process_directory(base)
