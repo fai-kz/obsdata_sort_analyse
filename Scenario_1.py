@@ -28,6 +28,32 @@ def classify_file(fits_path: Path) -> str:
     print(f"[Classification] {fits_path.name} -> science")
     return "science"
 
+def move_non_fits_to_meta(folder: Path):
+
+    if not folder.exists():
+        return
+
+    meta_dir = folder / "meta"
+    meta_dir.mkdir(exist_ok=True)
+
+    for item in folder.rglob("*"):
+
+        if item.is_file():
+
+            if item.suffix.lower() not in [".fit", ".fits"]:
+
+                # не трогаем папку meta
+                if "meta" in item.parts:
+                    continue
+
+                end_d = meta_dir / item.name
+
+                try:
+                    shutil.move(str(item), str(end_d))
+                    print(f" meta: {item} → {end_d}")
+                except Exception as e:
+                    print(f" Ошибка создания meta: {e}")
+
 
 def ensure_dirs(base: Path):
     print(f"[New folder] Creating folder: {base}")
@@ -83,8 +109,11 @@ def process_directory(base_dir: Path):
         except Exception as e:
             print(f"[Error] moving error: {e}")
 
+    move_non_fits_to_meta(date_dir)
 
 
+def is_year_folder(name: str):
+    return re.fullmatch(r"\d{4}", name) is not None
 
 def is_date_folder(name: str):
     return len(name) == 10 and name[4] == "-" and name[7] == "-"
@@ -108,10 +137,17 @@ def process_telescope(telescope_path: Path):
             continue
 
         # ищем год
-        for year_dir in mode_dir.iterdir():
+         for year_dir in telescope_path.rglob("*"):
 
             if not year_dir.is_dir():
                 continue
+
+            if not is_year_folder(year_dir.name):
+                continue
+
+            year_name = year_dir.name
+
+            print(f" Год: {year_name}")
 
             # ищем даты
             for date_dir in year_dir.iterdir():
@@ -120,36 +156,34 @@ def process_telescope(telescope_path: Path):
                     continue
 
                 date_name = date_dir.name
-                year_name = year_dir.name
+                #year_name = year_dir.name
 
                 print(f" Папка даты: {date_name}")
 
             
                 # Перемещение папок Calibration
             
-
-                calib_src = date_dir / "calib"
-
+                calib_src = date_dir / "calib"    
+            
                 if calib_src.exists():
 
-                    calib_target = calib_out / year_name / date_name
+                    calib_target = (calib_out /year_name / date_name)
+
                     calib_target.mkdir(parents=True, exist_ok=True)
 
                     for sub in ["flat", "bias", "dark", "lamp"]:
 
-                        # src = source - папка из которой перемещают
                         src = calib_src / sub
 
                         if src.exists():
 
-                            # end_d = end_directory - папка в которую перемещают
-                            end_d = calib_target / sub
+                            dst = calib_target / sub
 
-                            if not end_d.exists():
-                                shutil.move(str(src), str(end_d))
-                                print(f" Перемещено: из {src} в {end_d}")
+                            if not dst.exists():
+                                shutil.move(str(src), str(dst))
+                                print(f" Перемещено: из {src} в {dst}")
                             else:
-                                print(f" Папка уже существует: {end_d}")
+                                print(f" Папка уже существует: {dst}")
 
 
                 # Перемещение папок Science
@@ -158,17 +192,49 @@ def process_telescope(telescope_path: Path):
 
                 if science_src.exists():
 
-                    science_target = science_out / year_name / date_name
+                    science_target = (science_out /year_name /date_name)
+
                     science_target.mkdir(parents=True, exist_ok=True)
 
-                    end_d = science_target / "science"
+                    dst = science_target / "science"
 
-                    if not end_d.exists():
-                        shutil.move(str(science_src), str(end_d))
-                        print(f" Перемещено: из {src} в {end_d}")
-                    else:
-                        print(f" Папка уже существует: {end_d}")
-            
+                    if not dst.exists():
+
+                        shutil.move(str(science_src), str(dst))
+                
+                #перемещение meta
+                meta_target = (science_out /year_name /date_name /"meta")
+
+                meta_target.mkdir(parents=True, exist_ok=True)
+
+            # meta из calib
+                calib_meta = date_dir / "calib" / "meta"
+
+                if calib_meta.exists():
+
+                    for item in calib_meta.iterdir():
+
+                        dst = meta_target / item.name
+
+                        if not dst.exists():
+
+                            shutil.move(str(item), str(dst))
+                            print(f" meta(calib): {item} → {dst}")
+
+                    # meta из science
+                science_meta = date_dir / "science" / "meta"
+
+                if science_meta.exists():
+
+                    for item in science_meta.iterdir():
+
+                        dst = meta_target / item.name
+
+                        if not dst.exists():
+
+                            shutil.move(str(item), str(dst))
+                            print(f" meta(science): {item} → {dst}")
+                
 base = Path(r"paste the directory to the folder with files")
 process_directory(base)
 
