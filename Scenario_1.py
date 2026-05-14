@@ -36,23 +36,48 @@ def move_non_fits_to_meta(folder: Path):
     meta_dir = folder / "meta"
     meta_dir.mkdir(exist_ok=True)
 
+    # собираем список файлов
+    files_to_move = []
+
     for item in folder.rglob("*"):
 
-        if item.is_file():
+        if not item.is_file():
+            continue
 
-            if item.suffix.lower() not in [".fit", ".fits"]:
+        # не трогаем FITS
+        if item.suffix.lower() in [".fit", ".fits"]:
+            continue
 
-                # не трогаем папку meta
-                if "meta" in item.parts:
-                    continue
+        # не трогаем уже существующею папку meta
+        if "meta" in item.parts:
+            continue
 
-                end_d = meta_dir / item.name
+        files_to_move.append(item)
 
-                try:
-                    shutil.move(str(item), str(end_d))
-                    print(f" meta: {item} → {end_d}")
-                except Exception as e:
-                    print(f" Ошибка создания meta: {e}")
+    # перемещаем
+    for item in files_to_move:
+
+        end_d = meta_dir / item.name
+
+        try:
+
+            # если файл уже существует
+            if end_d.exists():
+
+                stem = item.stem
+                suffix = item.suffix
+
+                counter = 1
+
+                while end_d.exists():
+                    end_d = meta_dir / f"{stem}_{counter}{suffix}"
+                    counter += 1
+
+            shutil.move(str(item), str(end_d))
+
+            print(f" meta: {item} → {end_d}")
+        except Exception as e:
+            print(f" Ошибка создания папки meta: {e}")
 
 
 def ensure_dirs(base: Path):
