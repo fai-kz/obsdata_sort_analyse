@@ -1,7 +1,7 @@
 from pathlib import Path
 from astropy.io import fits
 import shutil
-
+import re
 
 CALIB_TYPES = ("dark", "flat", "bias", "lamp")
 
