@@ -1,5 +1,7 @@
 Observation data sorting and moving programm.
 
+Description
+
 This program code searches for files, in particular of the ".fits/.fit" format, inside the folder directory for subsequent sorting into the required categories. 
 The program code is written in the Python programming language, using the following libraries:
 
@@ -19,3 +21,5 @@ Then special functions are specified, within which all the work of the code is c
   -Creating folders in the desired directory and move previously created folders with files into them;
 
 Searching, sorting and creating folders occurs by specifying paths to folders. At the same time, the code will not sort copies of already sorted files and create new folders if they already exist. Along the way, the console will display the files, the path to their location, and the path to the place where they were moved. If any errors occur, they will be indicated in the console.
+
+Python version: 3.11.5
