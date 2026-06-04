@@ -134,7 +134,7 @@ def process_directory(base_dir: Path):
         except Exception as e:
             print(f"[Error] moving error: {e}")
 
-    move_non_fits_to_meta(date_dir)
+    move_non_fits_to_meta(base_dir)
 
 
 def is_year_folder(name: str):
@@ -233,7 +233,7 @@ def process_telescope(telescope_path: Path):
                 meta_target.mkdir(parents=True, exist_ok=True)
 
             # meta из calib
-                calib_meta = date_dir / "calib" / "meta"
+                calib_meta = date_dir / "meta"
 
                 if calib_meta.exists():
 
@@ -247,7 +247,7 @@ def process_telescope(telescope_path: Path):
                             print(f" meta(calib): {item} → {end_d}")
 
                     # meta из science
-                science_meta = date_dir / "science" / "meta"
+                science_meta = date_dir / "meta"
 
                 if science_meta.exists():
 
