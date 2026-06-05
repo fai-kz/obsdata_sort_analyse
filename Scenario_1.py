@@ -3,9 +3,10 @@ from astropy.io import fits
 import shutil
 import re
 
-CALIB_TYPES = ("dark", "flat", "bias", "lamp")
+#калибровочные файлы
+Calib_types = ("dark", "flat", "bias", "lamp")
 
-
+#функция получения нужного заголовка файлы "fits"
 def get_imagetype(fits_path: Path) -> str:
     try:
         with fits.open(fits_path) as hdul:
@@ -16,11 +17,11 @@ def get_imagetype(fits_path: Path) -> str:
         print(f"[Error] Failed to read {fits_path}: {e}")
         return ""
 
-
+#функция определения типа файла "fits": calibration и science
 def classify_file(fits_path: Path) -> str:
     imagetyp = get_imagetype(fits_path)
 
-    for t in CALIB_TYPES:
+    for t in Calib_types:
         if t in imagetyp:
             print(f"[Classification] {fits_path.name} -> {t}")
             return t
@@ -28,6 +29,7 @@ def classify_file(fits_path: Path) -> str:
     print(f"[Classification] {fits_path.name} -> science")
     return "science"
 
+#функция перемещения не файлов "fits" в отдельную папку meta
 def move_non_fits_to_meta(folder: Path):
 
     if not folder.exists():
@@ -79,7 +81,7 @@ def move_non_fits_to_meta(folder: Path):
         except Exception as e:
             print(f" Ошибка создания папки meta: {e}")
 
-
+#функция создания папок "science" и "calib"
 def ensure_dirs(base: Path):
     print(f"[New folder] Creating folder: {base}")
 
@@ -87,16 +89,16 @@ def ensure_dirs(base: Path):
     calib = base / "calib"
     calib.mkdir(exist_ok=True)
 
-    for t in CALIB_TYPES:
+    for t in Calib_types:
         (calib / t).mkdir(exist_ok=True)
 
+#функция перемещения научных и калибровочных файлов в соотвествующие папки "science" и "calib"
+def process_directory(Base_dir: Path):
+    Base_dir = Path(Base_dir)
 
-def process_directory(base_dir: Path):
-    base_dir = Path(base_dir)
+    print(f"[Scan] scan path: {Base_dir}")
 
-    print(f"[Scan] scan path: {base_dir}")
-
-    fits_found = [p for p in base_dir.rglob("*") if p.suffix.lower() in (".fits", ".fit")]
+    fits_found = [p for p in Base_dir.rglob("*") if p.suffix.lower() in (".fits", ".fit")]
 
     print(f"[Info] Found FITS files: {len(fits_found)}")
 
@@ -134,16 +136,16 @@ def process_directory(base_dir: Path):
         except Exception as e:
             print(f"[Error] moving error: {e}")
 
-    move_non_fits_to_meta(base_dir)
+    move_non_fits_to_meta(Base_dir)
 
-
+#функции определения года и даты по папкам
 def is_year_folder(name: str):
     return re.fullmatch(r"\d{4}", name) is not None
 
 def is_date_folder(name: str):
     return len(name) == 10 and name[4] == "-" and name[7] == "-"
 
-
+#функция создания папок сортировки в директории
 def process_telescope(telescope_path: Path):
 
     # создаём папку "observ_mode" в директории "...\Observation\observatory_id\instrument_id"
@@ -161,7 +163,7 @@ def process_telescope(telescope_path: Path):
         if not mode_dir.is_dir() or mode_dir.name == "observ_mode":
             continue
 
-        # ищем год
+        # определение года
          for year_dir in telescope_path.rglob("*"):
 
             if not year_dir.is_dir():
@@ -174,17 +176,15 @@ def process_telescope(telescope_path: Path):
 
             print(f" Год: {year_name}")
 
-            # ищем даты
+            # определение даты
             for date_dir in year_dir.iterdir():
 
                 if not date_dir.is_dir() or not is_date_folder(date_dir.name):
                     continue
 
                 date_name = date_dir.name
-                #year_name = year_dir.name
 
                 print(f" Папка даты: {date_name}")
-
             
                 # Перемещение папок Calibration
             
@@ -259,14 +259,15 @@ def process_telescope(telescope_path: Path):
 
                             shutil.move(str(item), str(end_d))
                             print(f" meta(science): {item} → {end_d}")
-                
-base = Path(r"paste the directory to the folder with files")
+
+#paste the directory to the folder with files
+base = Path(r"___")
 process_directory(base)
 
 # корневая папка | нужно указывать папку "Observation"
-BASE_DIR = Path(r"paste the directory")
+Base_dir = Path(r"___")
 
-for obs_dir in BASE_DIR.iterdir():
+for obs_dir in Base_dir.iterdir():
 
     if not obs_dir.is_dir():
         continue
