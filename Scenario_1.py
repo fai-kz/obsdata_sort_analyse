@@ -92,7 +92,10 @@ def ensure_dirs(base: Path):
     for t in Calib_types:
         (calib / t).mkdir(exist_ok=True)
 
-#функция перемещения научных и калибровочных файлов в соотвествующие папки "science" и "calib"
+
+# | Вторая часть |
+
+# функция перемещения научных и калибровочных файлов в соотвествующие папки "science" и "calib"
 def process_directory(Base_dir: Path):
     Base_dir = Path(Base_dir)
 
@@ -115,7 +118,7 @@ def process_directory(Base_dir: Path):
         # проверка на уже отсортированные
         if parent_dir.name in ("science", "dark", "flat", "bias", "lamp"):
             print("[Skip] sorted")
-            #continue
+            
 
         ensure_dirs(parent_dir)
 
@@ -260,11 +263,11 @@ def process_telescope(telescope_path: Path):
                             shutil.move(str(item), str(end_d))
                             print(f" meta(science): {item} → {end_d}")
 
-#paste the directory to the folder with files
+#Вставьте директорию папки с файлами для сортировки.
 base = Path(r"___")
 process_directory(base)
 
-# корневая папка | нужно указывать папку "Observation"
+# корневая папка | нужно указывать папку "Observation" для переноса в новую директорию
 Base_dir = Path(r"___")
 
 for obs_dir in Base_dir.iterdir():
