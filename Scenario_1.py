@@ -1,7 +1,14 @@
 from pathlib import Path
-from astropy.io import fits
+from uuid import uuid4
+from astropy.io.fits import getheader
 import shutil
 import re
+import logging
+import os
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
+from tqdm import tqdm
+
+logging.basicConfig(level=logging.DEBUG, filename="sorting_log.log",filemode="w", format="%(asctime)s %(levelname)s %(message)s")
 
 #калибровочные файлы
 Calib_types = ("dark", "flat", "bias", "lamp")
@@ -9,24 +16,21 @@ Calib_types = ("dark", "flat", "bias", "lamp")
 #функция получения нужного заголовка файлы "fits"
 def get_imagetype(fits_path: Path) -> str:
     try:
-        with fits.open(fits_path) as hdul:
-            val = str(hdul[0].header.get("IMAGETYP", "")).lower()
-            print(f"[Header] {fits_path.name} -> IMAGETYP = '{val}'")
-            return val
+        header = getheader(fits_path)
+        return str(header.get("IMAGETYP", "")).lower()
     except Exception as e:
-        print(f"[Error] Failed to read {fits_path}: {e}")
+        logging.debug(f"[Error] Failed to read {fits_path}: {e}")
         return ""
 
 #функция определения типа файла "fits": calibration и science
 def classify_file(fits_path: Path) -> str:
     imagetyp = get_imagetype(fits_path)
-
-    for t in Calib_types:
+        
+    for t in CALIB_TYPES:
         if t in imagetyp:
-            print(f"[Classification] {fits_path.name} -> {t}")
+            #logging.debug(f"[Classification] {fits_path.name} -> {t}")
             return t
 
-    print(f"[Classification] {fits_path.name} -> science")
     return "science"
 
 #функция перемещения не файлов "fits" в отдельную папку meta
@@ -35,93 +39,63 @@ def move_non_fits_to_meta(folder: Path):
     if not folder.exists():
         return
 
-    meta_dir = folder / "meta"
-    meta_dir.mkdir(exist_ok=True)
-
-    # собираем список файлов
-    files_to_move = []
-
-    for item in folder.rglob("*"):
-
-        if not item.is_file():
-            continue
-
-        # не трогаем FITS
-        if item.suffix.lower() in [".fit", ".fits"]:
-            continue
-
-        # не трогаем уже существующею папку meta
-        if "meta" in item.parts:
-            continue
-
-        files_to_move.append(item)
-
-    # перемещаем
-    for item in files_to_move:
-
-        end_d = meta_dir / item.name
-
-        try:
-
+   try:
+        end_d = meta_dir / folder.name
+       
             # если файл уже существует
-            if end_d.exists():
+        if end_d.exists():
 
-                stem = item.stem
-                suffix = item.suffix
+            end_d = (meta_dir / f"{folder.stem}_{uuid4().hex[:8]}{folder.suffix}")
 
-                counter = 1
+        shutil.move(str(folder), str(end_d))
 
-                while end_d.exists():
-                    end_d = meta_dir / f"{stem}_{counter}{suffix}"
-                    counter += 1
+            #logging.info(f"meta: {item} -> {end_d}")
 
-            shutil.move(str(item), str(end_d))
+    except PermissionError:
+            logging.warning(
+                f"Файл заблокирован или нет прав доступа: {folder}"
+            )
 
-            print(f" meta: {item} → {end_d}")
-        except Exception as e:
-            print(f" Ошибка создания папки meta: {e}")
+    except OSError as e:
+            logging.warning(
+                f"Ошибка доступа при перемещении {folder}: {e}"
+            )
 
-#функция создания папок "science" и "calib"
-def ensure_dirs(base: Path):
-    print(f"[New folder] Creating folder: {base}")
-
-    (base / "science").mkdir(exist_ok=True)
-    calib = base / "calib"
-    calib.mkdir(exist_ok=True)
-
-    for t in Calib_types:
-        (calib / t).mkdir(exist_ok=True)
-
+    except Exception as e:
+            logging.error(
+                f"Неожиданная ошибка при обработке {folder}: {e}"
+            )
 
 # | Вторая часть |
 
-# функция перемещения научных и калибровочных файлов в соотвествующие папки "science" и "calib"
-def process_directory(Base_dir: Path):
-    Base_dir = Path(Base_dir)
+#Заранее вложение файлов в списки
+def scan_files(root_dir):
+    fits_files = []
+    meta_files = []
 
-    print(f"[Scan] scan path: {Base_dir}")
+    for dirpath, _, filenames in os.walk(root_dir):
 
-    fits_found = [p for p in Base_dir.rglob("*") if p.suffix.lower() in (".fits", ".fit")]
+        dirpath = Path(dirpath)
 
-    print(f"[Info] Found FITS files: {len(fits_found)}")
+        for filename in filenames:
 
-    if not fits_found:
-        print("[Error] files not found")
-        return
-
-    for fits_path in fits_found:
-        print(f"\n[Found] {fits_path}")
-
-        parent_dir = fits_path.parent
-        print(f"[Path] {parent_dir}")
-
-        # проверка на уже отсортированные
-        if parent_dir.name in ("science", "dark", "flat", "bias", "lamp"):
-            print("[Skip] sorted")
+            file_path = dirpath / filename 
             
+            if file_path.suffix.lower() in (".fits", ".fit"):
+                fits_files.append(file_path)
+                
+            else:
+                meta_files.append(file_path)
+            
+    return fits_files, meta_files
 
-        ensure_dirs(parent_dir)
-
+# функция перемещения научных и калибровочных файлов в соотвествующие папки "science" и "calib"
+def process_directory(fits_path: Path):
+   
+    try:
+        
+        parent_dir = fits_path.parent
+        
         file_type = classify_file(fits_path)
 
         if file_type == "science":
@@ -129,17 +103,19 @@ def process_directory(Base_dir: Path):
         else:
             target_dir = parent_dir / "calib" / file_type
 
+        target_dir.mkdir(parents=True, exist_ok=True)
+        
         target_path = target_dir / fits_path.name
 
-        print(f"[Moved to] {fits_path} -> {target_path}")
+        if target_path.exists():
+            return
+        
+        shutil.move(str(fits_path), str(target_path))
+        
+    except Exception as e:
+        print(f"[Error] moving error: {e}")
 
-        try:
-            shutil.move(str(fits_path), str(target_path))
-            print("[Done] moved")
-        except Exception as e:
-            print(f"[Error] moving error: {e}")
-
-    move_non_fits_to_meta(Base_dir)
+    #move_non_fits_to_meta(Base_dir)
 
 #функции определения года и даты по папкам
 def is_year_folder(name: str):
@@ -177,8 +153,6 @@ def process_telescope(telescope_path: Path):
 
             year_name = year_dir.name
 
-            print(f" Год: {year_name}")
-
             # определение даты
             for date_dir in year_dir.iterdir():
 
@@ -186,8 +160,6 @@ def process_telescope(telescope_path: Path):
                     continue
 
                 date_name = date_dir.name
-
-                print(f" Папка даты: {date_name}")
             
                 # Перемещение папок Calibration
             
@@ -209,11 +181,7 @@ def process_telescope(telescope_path: Path):
 
                             if not end_d.exists():
                                 shutil.move(str(src), str(end_d))
-                                print(f" Перемещено: из {src} в {end_d}")
-                            else:
-                                print(f" Папка уже существует: {end_d}")
-
-
+                                
                 # Перемещение папок Science
 
                 science_src = date_dir / "science"
@@ -240,45 +208,86 @@ def process_telescope(telescope_path: Path):
 
                 if calib_meta.exists():
 
-                    for item in calib_meta.iterdir():
+                    for file in calib_meta.iterdir():
 
-                        end_d = meta_target / item.name
+                        end_d = meta_target / file.name
 
                         if not end_d.exists():
 
-                            shutil.move(str(item), str(end_d))
-                            print(f" meta(calib): {item} → {end_d}")
-
+                            shutil.move(str(file), str(end_d))
+                        
                     # meta из science
                 science_meta = date_dir / "meta"
 
                 if science_meta.exists():
 
-                    for item in science_meta.iterdir():
+                    for file in science_meta.iterdir():
 
-                        end_d = meta_target / item.name
+                        end_d = meta_target / file.name
 
                         if not end_d.exists():
 
-                            shutil.move(str(item), str(end_d))
-                            print(f" meta(science): {item} → {end_d}")
+                            shutil.move(str(file), str(end_d))
 
-#Вставьте директорию папки с файлами для сортировки.
-base = Path(r"___")
-process_directory(base)
+#|Запуск работы|
+                          
+if __name__ == "__main__":
+    #Директория папки с файлами для сортировки
+    base = Path(r"C:\Users\Nurken\Desktop\python\ML\Observation tzhao\tshao\zeiss1000_east\2025\2025-04-25")
+    #process_directory(base)
+    fits_files, meta_files = scan_files(base)
 
-# корневая папка | нужно указывать папку "Observation" для переноса в новую директорию
-Base_dir = Path(r"___")
+    #thread  = min(32, (os.cpu_count() or 1) * 4)
 
-for obs_dir in Base_dir.iterdir():
+    with ProcessPoolExecutor(max_workers=8 ) as executor:
 
-    if not obs_dir.is_dir():
-        continue
+        futures = [
+            executor.submit(process_directory, fits_path)
+            for fits_path in fits_files
+        ]
 
-    # observatory_id 
-    for telescope_dir in obs_dir.iterdir():
+        for _ in tqdm(
+            as_completed(futures),
+            total=len(futures),
+            desc="FITS"
+        ):
+            pass
+        
+        
+    meta_dir = base / "meta"
+    meta_dir.mkdir(parents=True, exist_ok=True)
 
-        if telescope_dir.is_dir():
-            process_telescope(telescope_dir)
+    with ProcessPoolExecutor(max_workers=8 ) as executor:
+
+        futures = [
+            executor.submit(
+                move_non_fits_to_meta,
+                meta_file,
+                meta_dir
+            )
+            for meta_file in meta_files
+        ]
+
+        for _ in tqdm(
+            as_completed(futures),
+            total=len(futures),
+            desc="META"
+        ):
+            pass
+
+    # корневая папка | нужно указывать папку "Observation"
+    base_dir = Path(r"C:\Users\Nurken\Desktop\python\ML\Observation tzhao")
+    
+
+    for obs_dir in base_dir.iterdir():
+
+        if not obs_dir.is_dir():
+            continue
+
+        # observatory_id 
+        for telescope_dir in obs_dir.iterdir():
+
+            if telescope_dir.is_dir():
+                process_telescope(telescope_dir)
 
 
