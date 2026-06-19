@@ -45,10 +45,17 @@ def get_target_dir(file_path: Path, file_type: str) -> Path:
     # 1. Base classification
     if file_type == "meta":
         target = fai_base / "targets" / year_name / date_name / "meta"
+
     elif file_type == "targets":
         target = fai_base / "targets" / year_name / date_name / "raw"
+
+    elif file_type.startswith("masters/"):
+        sub_type = file_type.split("/")[-1]
+
+        target = (fai_base / "calibration" / year_name / date_name / "masters" / sub_type)
+
     else:
-        target = fai_base / "calibration" / year_name / date_name / file_type
+        target = (fai_base / "calibration" / year_name / date_name / file_type)
 
     # 2. Universal interceptor for any test files overrides the base target
     if "test" in file_path.name.lower():
@@ -65,13 +72,30 @@ def get_imagetype(fits_path: Path) -> str:
         logging.debug(f"[Error] Failed to read {fits_path}: {e}")
         return ""
 
+def get_masters_readoutm(fits_path: Path) -> str:
+    try:
+        header = getheader(fits_path)
+        readout = str(header.get("READOUT", "")).lower()
+
+        return (
+            "(preflash)" in readout or
+            "(RBI flood)" in readout
+        )
+
+    except Exception as e:
+        logging.debug(f"[Error] Failed to read READOUT from {fits_path}: {e}")
+        return False
+
 # function to determine the type of "fits" file: calibration and targets
 def classify_file(fits_path: Path) -> str:
     imagetyp = get_imagetype(fits_path)
 
     for t in Calib_types:
         if t in imagetyp:
-            #logging.debug(f"[Classification] {fits_path.name} -> {t}")
+            # determining for master calibration
+            if get_masters_readoutm(fits_path):
+                return f"masters/{t}"
+
             return t
 
     return "targets"
