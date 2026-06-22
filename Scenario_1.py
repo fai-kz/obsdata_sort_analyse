@@ -75,11 +75,12 @@ def get_imagetype(fits_path: Path) -> str:
 def get_masters_readoutm(fits_path: Path) -> str:
     try:
         header = getheader(fits_path)
-        readout = str(header.get("READOUT", "")).lower()
+        readout = str(header.get("READOUTM", "")).lower()
 
         return (
-            "(preflash)" in readout or
-            "(RBI flood)" in readout
+            "preflash" in readout or
+            "RBI flood" in readout or
+            "pre-flash" in readout
         )
 
     except Exception as e:
