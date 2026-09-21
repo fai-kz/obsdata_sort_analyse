@@ -8,6 +8,8 @@ from astropy import units as u
 from astropy.nddata import CCDData
 import ccdproc
 
+#code create new substracted lamp files without deleting last sub files
+#check directory with lamp files before starting code
 LOG_FILE = Path(__file__).resolve().parent / "dark_substructing_log.txt"
 
 
