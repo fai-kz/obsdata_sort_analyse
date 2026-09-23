@@ -10,6 +10,7 @@ from ccdproc import combine
 import csv
 from datetime import (datetime, timedelta)
 
+#FOR INPUT DIRECTORY WRITE "...\calibration" - Folder that contain all calibration files
 
 LOG_FILE = Path(__file__).resolve().parent / "combinig_log.txt"
 
