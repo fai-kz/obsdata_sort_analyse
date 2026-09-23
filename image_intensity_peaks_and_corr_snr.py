@@ -7,6 +7,9 @@ from scipy.signal import find_peaks, peak_widths
 from scipy.stats import pearsonr
 import logging
 
+#FOR INPUT DIRECTORY WRITE "...\calibration\...\lamp"
+#AFTER THAT WRITE LAMP FILES NAMES WITH COMMA : "NAME, NAME, ..."
+
 def read_fits_data(fits_path):
 
     with fits.open(fits_path) as hdul:
