@@ -523,8 +523,6 @@ if __name__ == "__main__":
 
         logging.warning("\nNo file selected")
 
-        return
-
     
     for file_path in file_paths:
 
@@ -535,8 +533,6 @@ if __name__ == "__main__":
     if not profiles:
 
         logging.warning("\ncannot get any profile")
-
-        return
     
     
     #для построения первого графика пиков по ширине снимка
