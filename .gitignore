@@ -2,3 +2,7 @@
 *swo
 *bkp*
 __pycache__/
+data/
+observations/
+.DS_Store
+.ipynb_checkpoints/
