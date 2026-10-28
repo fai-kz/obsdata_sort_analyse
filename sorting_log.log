@@ -1,0 +1,13 @@
+2026-07-15 23:06:40,030 WARNING [Error] Corrupted FITS left in place /observations/tshao/zeiss1000_east/ccd/2021/2021-02-02/_temp_ext_a8d7da0c2f9c469fa86a271491edf01a/BX_Mon-003_B.fit: Empty or corrupt FITS file
+2026-07-15 23:06:41,097 WARNING [Error] Corrupted FITS left in place /observations/tshao/zeiss1000_east/ccd/2021/2021-02-02/_temp_ext_b4f6315ee333417c9cd6eb3b305e335a/HD59509-002_V.fit: Empty or corrupt FITS file
+2026-07-15 23:06:41,795 WARNING [Error] Corrupted FITS left in place /observations/tshao/zeiss1000_east/ccd/2021/2021-02-02/_temp_ext_6384bbf7b20045df9c4649e8923dc231/MWC560-001_V.fit: Empty or corrupt FITS file
+2026-07-15 23:06:42,814 WARNING [Error] Corrupted FITS left in place /observations/tshao/zeiss1000_east/ccd/2021/2021-02-03/_temp_ext_668977ec1e5a47c3bc286fd9e1588b8a/2021BHD-003_R.fit: Empty or corrupt FITS file
+2026-07-15 23:06:43,864 WARNING [Error] Corrupted FITS left in place /observations/tshao/zeiss1000_east/ccd/2021/2021-02-03/_temp_ext_6603ec7fb4314e73bf8456a17e9cbfe6/28117+23680-023_CL.fit: Empty or corrupt FITS file
+2026-07-15 23:06:43,865 WARNING [Error] Corrupted FITS left in place /observations/tshao/zeiss1000_east/ccd/2021/2021-02-14/_temp_ext_f3db06b088d546ed9abf46065e71b7ca/MWC560-007_V.fit: Empty or corrupt FITS file
+2026-07-15 23:06:52,094 WARNING [Error] Same name but different content; source left in place: /observations/tshao/zeiss1000_east/ccd/2021/2021-06-29/AS314-001_B.fit -> /observations/tshao/zeiss1000_east/ccd/targets/2021/2021-06-29/raw/AS314-001_B.fit
+2026-07-15 23:06:58,209 WARNING [Error] Corrupted FITS left in place /observations/tshao/zeiss1000_east/ccd/2025/2025-06-21/_temp_ext_f2658ded172a4c0e8c0dbaf01c8ae229/900070-3-103_CL3.fit: File may have been truncated: actual file length (2031616) is smaller than the expected size (2079360)
+2026-07-15 23:07:03,231 WARNING [Error] Could not build meta path for: /observations/tshao/zeiss1000_east/ccd/master_gen_errors.log
+2026-07-15 23:07:03,232 WARNING [Error] Could not build meta path for: /observations/tshao/zeiss1000_east/ccd/science_reduction_errors.log
+2026-07-15 23:07:03,232 WARNING [Error] Could not build meta path for: /observations/tshao/zeiss1000_east/ccd/stacking_pipeline_errors.log
+2026-07-15 23:07:03,232 WARNING [Error] Could not build meta path for: /observations/tshao/zeiss1000_east/ccd/complete_reduction_errors.log
+2026-07-15 23:07:03,233 WARNING [Error] Could not build meta path for: /observations/tshao/zeiss1000_east/ccd/@eaDir/2014@SynoResource
