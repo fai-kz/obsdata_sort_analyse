@@ -1,0 +1,5 @@
+{
+  "full_rd_sha256": "907d41da9fd870e340b962128f4d415d016baf0ada61db5656a067fd6f005e85",
+  "fixture_sha256": "7ac29860f985b0cacee84e1bbba17a01c797a8cb812289d17d56ed082c7d68ae",
+  "extraction": "Complete zeroed service element. Both executable code blocks are identical to the original RD."
+}

@@ -1,0 +1,41 @@
+{
+  "test_scope": "Deployed handler with controlled clock and database test double; no HTTP transition test",
+  "rd_sha256": "907d41da9fd870e340b962128f4d415d016baf0ada61db5656a067fd6f005e85",
+  "executed_utc": "2026-10-28T07:41:09.671651+00:00",
+  "cases": [
+    {
+      "date": "2026-10-28",
+      "release": "2026-10-29",
+      "outcome": "masked",
+      "headers_identical": true,
+      "payload_sha256": "d0af5f020acaa992be5a460318f227f727e0701631230761982a9a8a557c0bb9",
+      "passed": true
+    },
+    {
+      "date": "2026-10-29",
+      "release": "2026-10-29",
+      "outcome": "original",
+      "headers_identical": true,
+      "payload_sha256": "6f6dcf276a082c693788170ca0c1b7ac9576db90553841b208f53eb6afea7a99",
+      "passed": true
+    },
+    {
+      "date": "2026-10-30",
+      "release": "2026-10-29",
+      "outcome": "original",
+      "headers_identical": true,
+      "payload_sha256": "6f6dcf276a082c693788170ca0c1b7ac9576db90553841b208f53eb6afea7a99",
+      "passed": true
+    },
+    {
+      "date": "2026-10-28",
+      "release": "2026-10-29",
+      "outcome": "masked",
+      "headers_identical": true,
+      "payload_sha256": "d0af5f020acaa992be5a460318f227f727e0701631230761982a9a8a557c0bb9",
+      "passed": true
+    }
+  ],
+  "source_unchanged": true,
+  "publication_note": "Original development-host run; only the absolute source path was removed. The RD hash refers to the full deployed descriptor, not the extracted fixture."
+}
